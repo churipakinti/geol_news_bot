@@ -8,7 +8,7 @@ from discord.ext import commands, tasks
 
 # Load Token from Environment Variables (safer than hardcoding)
 TOKEN = os.getenv("DISCORD_TOKEN")
-CHANNEL_ID = 1351055856942186557  # Replace with your Discord channel ID
+CHANNEL_ID = 1339360918928232509 # Replace with your Discord channel ID
 
 # RSS Feed URL
 rss_url = "https://us22.campaign-archive.com/feed?u=f72114448ed6d63ea977c699d&id=f2bc6d4d01"
