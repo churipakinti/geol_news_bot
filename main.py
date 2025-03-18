@@ -106,27 +106,6 @@ async def on_ready():
     print(f"✅ Logged in as {bot.user}")
     await send_post()  # Send post on startup
 
-import asyncio
-
-# ✅ 1️⃣ Ping Command: Check if bot is alive
-@bot.command()
-async def ping(ctx):
-    await ctx.send(f"🏓 Pong! Latency: {round(bot.latency * 1000)}ms")
-
-# ✅ 2️⃣ Heartbeat Message: Send a status message every hour
-async def send_heartbeat():
-    channel = bot.get_channel(1351055856942186557)
-    while True:
-        await channel.send("💓 Bot is alive!")  # Modify this message if needed
-        await asyncio.sleep(3600)  # Sends a message every hour
-
-# ✅ 3️⃣ Modify on_ready() to Start Heartbeat
-@bot.event
-async def on_ready():
-    print(f"✅ Logged in as {bot.user}")
-    await send_post()  # Send latest post on startup
-    bot.loop.create_task(send_heartbeat())  # Start the heartbeat message
-
 
 
 keep_alive()
