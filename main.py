@@ -5,21 +5,25 @@ from bs4 import BeautifulSoup
 import discord
 from discord.ext import commands, tasks
 
-
 # Load Token from Environment Variables (safer than hardcoding)
 TOKEN = os.getenv("DISCORD_TOKEN")
-CHANNEL_ID = 1339360918928232509 # Replace with your Discord channel ID
+CHANNEL_ID = 1351055856942186557  # Replace with your Discord channel ID
 
 # RSS Feed URL
 rss_url = "https://us22.campaign-archive.com/feed?u=f72114448ed6d63ea977c699d&id=f2bc6d4d01"
+
+# Variable to store the last published post
+last_published_title = None
 
 # Initialize Discord Bot
 intents = discord.Intents.default()
 intents.message_content = True  # Required for message reading
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Function to Fetch RSS Data
+# ✅ Function to Fetch RSS Data
 def fetch_latest_post():
+    global last_published_title
+
     response = requests.get(rss_url)
     soup = BeautifulSoup(response.content, "xml")
 
@@ -30,6 +34,13 @@ def fetch_latest_post():
     # Extract Main Data
     title = latest_post.find("title").text.strip() if latest_post.find("title") else "No title found"
     link = latest_post.find("link").text.strip() if latest_post.find("link") else "No link found"
+
+    # If it's the same as the last post, return None (to avoid duplicates)
+    if title == last_published_title:
+        return None
+
+    # Update last published title
+    last_published_title = title
 
     # Fetch the actual webpage content
     page_response = requests.get(link)
@@ -71,7 +82,7 @@ def fetch_latest_post():
         "images": images
     }
 
-# Function to Send Post to Discord
+# ✅ Function to Send Post to Discord
 async def send_post():
     channel = bot.get_channel(CHANNEL_ID)
     post = fetch_latest_post()
@@ -100,13 +111,28 @@ async def send_post():
 
     await channel.send(embed=embed)
 
-# Run Task on Bot Startup
+# ✅ Periodically Check for New Posts
+@tasks.loop(minutes=10)  # Revisar cada 10 minutos
+async def check_rss():
+    await send_post()
+
+# ✅ Bot Ready Event
 @bot.event
 async def on_ready():
+    global last_published_title
     print(f"✅ Logged in as {bot.user}")
-    await send_post()  # Send post on startup
+    
+    # Get initial latest post title to avoid duplicate posting
+    latest_post = fetch_latest_post()
+    if latest_post:
+        last_published_title = latest_post["title"]
 
+    check_rss.start()  # Iniciar la verificación periódica del RSS
 
+# ✅ Ping Command to Check if Bot is Alive
+@bot.command()
+async def ping(ctx):
+    await ctx.send(f"🏓 Pong! Latency: {round(bot.latency * 1000)}ms")
 
-keep_alive()
+# Run the bot
 bot.run(TOKEN)
